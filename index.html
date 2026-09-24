@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Amazônia Bee · Geladeira de mel</title>
+<meta name="description" content="Gestão da geladeira de mel Amazônia Bee: temperatura em tempo real da unidade Resfri Ar AK1 e controle de lotes de mel em kg.">
+<meta name="theme-color" content="#f5f0e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15100a" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Geladeira de mel">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="assets/icons/favicon-48.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<!--APP-START-->
+<header class="appbar" id="appbar">
+  <div class="brand">
+    <img src="assets/logo-amazonia-bee.png" alt="Amazônia Bee" width="40" height="39">
+    <div class="brand-text">
+      <span class="brand-name">Amazônia Bee</span>
+      <span class="brand-sub" id="brandSub">Geladeira de mel</span>
+    </div>
+  </div>
+  <button class="conn" id="connChip" data-state="off" type="button" aria-haspopup="dialog">
+    <span class="dot" aria-hidden="true"></span><span id="connLabel">Desconectada</span>
+  </button>
+</header>
+<div class="demo-ribbon" id="demoRibbon" hidden>Modo demonstração · geladeira simulada e dados de exemplo</div>
+
+<main class="shell" id="main">
+  <section class="view" id="view-painel" aria-labelledby="t-painel"></section>
+  <section class="view" id="view-estoque" aria-labelledby="t-estoque" hidden></section>
+  <section class="view" id="view-historico" aria-labelledby="t-historico" hidden></section>
+  <section class="view" id="view-ajustes" aria-labelledby="t-ajustes" hidden></section>
+</main>
+
+<button class="fab" id="fab" type="button" data-act="entrada" hidden></button>
+
+<nav class="tabbar" aria-label="Seções">
+  <button class="tab" type="button" data-tab="painel" aria-current="page"><span class="ind" data-icon="gauge"></span>Painel</button>
+  <button class="tab" type="button" data-tab="estoque"><span class="ind" data-icon="jar"></span>Estoque</button>
+  <button class="tab" type="button" data-tab="historico"><span class="ind" data-icon="chart"></span>Histórico</button>
+  <button class="tab" type="button" data-tab="ajustes"><span class="ind" data-icon="gear"></span>Ajustes</button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div id="sheetBody"></div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<!--APP-END-->
+<script src="js/protocol.js"></script>
+<script src="js/ble.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

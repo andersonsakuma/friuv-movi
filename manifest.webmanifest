@@ -1,0 +1,23 @@
+{
+  "name": "Amazônia Bee · Geladeira de mel",
+  "short_name": "Geladeira de mel",
+  "description": "Temperatura da geladeira Resfri Ar AK1 em tempo real e controle de lotes de mel em kg.",
+  "lang": "pt-BR",
+  "id": "./",
+  "start_url": "./#painel",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f0e6",
+  "theme_color": "#f5f0e6",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Entrada de mel", "url": "./#estoque", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Histórico", "url": "./#historico", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
