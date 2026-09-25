@@ -48,7 +48,32 @@ Antes de conectar: feche o app oficial da geladeira e o nRF Connect (o módulo a
 
 Depois da primeira autorização, o app tenta reconectar sozinho ao abrir, quando o Chrome permite. Se a conexão cair, ele tenta de novo em 5, 10, 15… até 30 s.
 
-**iPhone:** o Safari não oferece Bluetooth pelo navegador. O controle de estoque funciona, a conexão com a geladeira não.
+## Como usar no iPhone e no iPad
+
+O mesmo endereço funciona no iOS. O que muda é o Bluetooth: **o Safari não acessa Bluetooth**, e nenhum navegador da Apple acessa.
+
+### Registrar mel e ver o histórico (Safari)
+
+1. Abra **https://andersonsakuma.github.io/amazonia-bee-geladeira/** no Safari.
+2. Toque em **Compartilhar** e escolha **Adicionar à Tela de Início**.
+3. Abra pelo ícone. Tudo funciona: entradas e saídas de lotes, histórico, gráficos, cópia de segurança e planilhas.
+
+Instalar na Tela de Início não é só conforto: o iOS apaga os dados de sites pouco usados depois de alguns dias, e um app na Tela de Início fica fora dessa limpeza. Mesmo assim, use a cópia de segurança com frequência.
+
+No iPhone, os botões de exportar abrem a folha de compartilhamento do iOS: dá para salvar em Arquivos, mandar por AirDrop ou WhatsApp. O botão de restaurar abre o app Arquivos.
+
+### Conectar a geladeira pelo iPhone (Bluefy)
+
+O Safari não tem Bluetooth, mas existem navegadores de iOS que têm. O app detecta sozinho e libera o controle quando aberto em um deles.
+
+1. Instale o **Bluefy — Web BLE Browser** pela App Store (gratuito).
+2. No app, em **Ajustes → Conexão**, toque em **Como conectar** e depois em **Copiar endereço**.
+3. Cole o endereço na barra do Bluefy e abra.
+4. Toque em **Conectar geladeira** e escolha `AK1-FEFE0C070750`.
+
+No Bluefy o app funciona igual ao Android: leitura a cada 5 segundos, ajuste do setpoint com confirmação e gravação do histórico.
+
+Cada navegador guarda os próprios dados. O que for registrado no Safari não aparece no Bluefy e vice-versa; use a cópia de segurança para passar de um para o outro, ou escolha um navegador só para o trabalho no iPhone.
 
 ### APK para instalar sem a loja
 

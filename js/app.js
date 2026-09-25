@@ -3,8 +3,9 @@
   "use strict";
   const { DEVICE, UUID, buildSetTargetPacket, formatHex, formatAscii } = window.AK1;
   const { WebBleTransport, SimTransport, FridgeController } = window.FridgeBLE;
+  const PLAT = window.PLAT;
   const PREVIEW = !!window.__AB_PREVIEW;
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
 
   /* ================= utilidades ================= */
   const $ = (s, r = document) => r.querySelector(s);
@@ -75,8 +76,11 @@
     wifi: '<path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
-    share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
     snow: '<path d="M12 2v20M4 7l16 10M20 7 4 17"/>',
+    phone: '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10.5 18.5h3"/>',
+    share: '<path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
+    plusSquare: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/>',
+    copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 16V5a2 2 0 0 1 2-2h11"/>',
   };
   const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 
@@ -108,6 +112,7 @@
     wakeLock: false,
     notificar: false,
     onboarded: false,
+    dicaInstalarOculta: false,
     lastKnown: { current: 10, target: 13, unit: "C", t: null, fonte: "Validação da Etapa 1 com a geladeira real" },
   };
 
@@ -486,7 +491,7 @@
     const pending = live && S.pendingSet != null && S.pendingSet !== s.target;
     const outBand = shown != null && (shown < m.faixaMin || shown > m.faixaMax);
     let note;
-    if (!live) note = `<div class="note">${bleSupported() ? "Conecte a geladeira para ajustar a temperatura." : "Este navegador não acessa Bluetooth. Veja Conexão."}</div>`;
+    if (!live) note = `<div class="note">${bleSupported() ? "Conecte a geladeira para ajustar a temperatura." : PLAT.ios ? "O Safari do iPhone não acessa Bluetooth." : "Este navegador não acessa Bluetooth."}</div>`;
     else if (locked) note = `<div class="note warn">${icon("lock").replace("<svg", '<svg style="width:14px;height:14px;vertical-align:-2px"')} A geladeira informou controles bloqueados. Nenhum comando será enviado.</div>`;
     else if (outBand) note = `<div class="note warn">${temp(shown)} °C fica fora da faixa de conservação (${m.faixaMin}–${m.faixaMax} °C).</div>`;
     else note = `<div class="note">Limites da geladeira: ${temp(s.minTemp)} a ${temp(s.maxTemp)} °C · somente zona 1.</div>`;
@@ -509,7 +514,11 @@
         ${apply}
         ${note}
       </div>
-      ${!live ? `<div class="connect-cta"><button class="btn btn-primary btn-block" data-act="connect" ${S.ctl.state === "connecting" || S.ctl.state === "requesting" ? "disabled" : ""}>${icon("bt")}${S.ctl.state === "reconnecting" ? "Reconectando… toque para escolher de novo" : "Conectar geladeira"}</button></div>` : ""}`);
+      ${!live ? `<div class="connect-cta">${
+        bleSupported()
+          ? `<button class="btn btn-primary btn-block" data-act="connect" ${S.ctl.state === "connecting" || S.ctl.state === "requesting" ? "disabled" : ""}>${icon("bt")}${S.ctl.state === "reconnecting" ? "Reconectando… toque para escolher de novo" : "Conectar geladeira"}</button>`
+          : `<button class="btn btn-secondary btn-block" data-act="como-conectar-iphone">${icon("bt")}Como conectar pelo iPhone</button>`
+      }</div>` : ""}`);
   }
 
   function renderTelemetry(m) {
@@ -528,6 +537,7 @@
     if (!el) return;
     const out = [];
     const sug = clamp(Math.round((m.faixaMin + m.faixaMax) / 2), S.live?.minTemp ?? -128, S.live?.maxTemp ?? 127);
+    if (PLAT.iosSemBle && !PLAT.standalone && !S.settings.dicaInstalarOculta && !PREVIEW) out.push(blocoInstalarIphone(true));
     if (S.alertActive && m.on) {
       const mins = Math.round((Date.now() - S.outSince) / MIN);
       out.push(`<div class="banner crit" role="alert">${icon("alert")}<div><strong>Temperatura fora da faixa há ${mins} min</strong><p>${temp(m.cur)} °C com faixa de ${m.faixaMin}–${m.faixaMax} °C. Verifique porta, alimentação e temperatura configurada.</p></div></div>`);
@@ -540,7 +550,11 @@
     if (m.tgt != null && (m.tgt < m.faixaMin || m.tgt > m.faixaMax) && S.pendingSet == null) {
       const act = m.on && !S.live.locked
         ? `<button class="btn btn-sm btn-primary" data-act="suggest" data-v="${sug}">Preparar ajuste para ${temp(sug)} °C</button>`
-        : !m.on ? `<button class="btn btn-sm btn-secondary" data-act="connect">${icon("bt")}Conectar para ajustar</button>` : "";
+        : !m.on
+          ? (bleSupported()
+              ? `<button class="btn btn-sm btn-secondary" data-act="connect">${icon("bt")}Conectar para ajustar</button>`
+              : `<button class="btn btn-sm btn-secondary" data-act="como-conectar-iphone">${icon("bt")}Como conectar pelo iPhone</button>`)
+          : "";
       out.push(`<div class="banner warn">${icon("snow")}<div><strong>Temperatura configurada em ${temp(m.tgt)} °C</strong><p>Fora da faixa de conservação do mel (${m.faixaMin}–${m.faixaMax} °C).</p>${act ? `<div class="actions" style="margin-top:8px">${act}</div>` : ""}</div></div>`);
     }
     setHTML(el, out.join(""));
@@ -892,8 +906,8 @@
       <div>
         <div class="group-title">Dados</div>
         <div class="list">
-          <div class="item"><div><div class="t1">Cópia de segurança</div><div class="t2">Lotes, movimentações, leituras e ajustes em um arquivo .json. Os dados ficam só neste aparelho.</div></div><div class="ctrl row"><button class="btn btn-sm btn-secondary" data-act="backup">${icon("download")}Salvar</button></div></div>
-          <div class="item"><div><div class="t1">Restaurar cópia</div><div class="t2">Substitui os dados atuais pelos do arquivo.</div></div><div class="ctrl"><label class="btn btn-sm btn-secondary" for="importFile">${icon("upload")}Abrir</label><input type="file" id="importFile" accept="application/json,.json" hidden></div></div>
+          <div class="item"><div><div class="t1">Cópia de segurança</div><div class="t2">Lotes, movimentações, leituras e ajustes em um arquivo .json. Os dados ficam só neste aparelho.${PLAT.ios ? " No iPhone abre a folha de compartilhamento: Arquivos, AirDrop, WhatsApp." : ""}</div></div><div class="ctrl row"><button class="btn btn-sm btn-secondary" data-act="backup">${icon("download")}Salvar</button></div></div>
+          <div class="item"><div><div class="t1">Restaurar cópia</div><div class="t2">Substitui os dados atuais pelos do arquivo.${PLAT.ios ? " Escolha o .json no app Arquivos." : ""}</div></div><div class="ctrl"><label class="btn btn-sm btn-secondary" for="importFile">${icon("upload")}Abrir</label><input type="file" id="importFile" accept=".json,application/json,text/plain,*/*" hidden></div></div>
           <div class="item"><div><div class="t1">Planilhas (CSV)</div><div class="t2">Separador ";" e vírgula decimal, prontas para o Excel.</div></div><div class="ctrl row"><button class="btn btn-sm btn-secondary" data-act="csv-movs">Movimentos</button><button class="btn btn-sm btn-secondary" data-act="csv-leituras">Leituras</button></div></div>
           <div class="item"><div><div class="t1">Apagar dados deste aparelho</div><div class="t2">${S.demo ? "Recria os dados de exemplo." : "Remove lotes, movimentações, leituras e eventos."}</div></div><div class="ctrl"><button class="btn btn-sm btn-ghost" style="color:var(--crit)" data-act="wipe">${icon("trash")}Apagar</button></div></div>
         </div>
@@ -916,10 +930,17 @@
     const on = connected();
     el.innerHTML = `
       <div class="item"><div><div class="t1">${esc(DEVICE.targetName)}${S.demo ? " · simulada" : ""}</div><div class="t2 mono">${esc(DEVICE.address)} · serviço 1234 · validada na Etapa 1</div></div>
-        <div class="ctrl">${on ? `<button class="btn btn-sm btn-secondary" data-act="disconnect">Desconectar</button>` : `<button class="btn btn-sm btn-primary" data-act="connect" ${bleSupported() ? "" : "disabled"}>${icon("bt")}Conectar</button>`}</div></div>
-      ${!bleSupported() ? `<div class="item stack"><div class="t2" style="color:var(--warn)">Este navegador não oferece Bluetooth Web. Use o Chrome no Android com o app aberto pelo endereço HTTPS, ou ative o modo demonstração.</div></div>` : ""}
+        <div class="ctrl">${on
+          ? `<button class="btn btn-sm btn-secondary" data-act="disconnect">Desconectar</button>`
+          : bleSupported()
+            ? `<button class="btn btn-sm btn-primary" data-act="connect">${icon("bt")}Conectar</button>`
+            : `<button class="btn btn-sm btn-secondary" data-act="como-conectar-iphone">${icon("bt")}Como conectar</button>`}</div></div>
+      ${!bleSupported() ? `<div class="item stack"><div class="t2">${PLAT.ios
+        ? `O Safari do iPhone não acessa Bluetooth. Para conectar a geladeira, abra este app no navegador <b>Bluefy</b>; o botão acima mostra o passo a passo.`
+        : `Este navegador não oferece Bluetooth Web. Use o Chrome no Android com o app aberto pelo endereço HTTPS, ou ative o modo demonstração.`}</div></div>` : ""}
       <div class="item"><div><div class="t1">Manter a tela ligada</div><div class="t2">Evita que o celular suspenda o monitoramento enquanto conectado.</div></div><label class="switch ctrl"><input type="checkbox" id="sWake" data-set="wakeLock" ${S.settings.wakeLock ? "checked" : ""} aria-label="Manter a tela ligada"><span></span></label></div>
       <div class="item"><div><div class="t1">Alertas no celular</div><div class="t2">Notificação e vibração quando a temperatura sair da faixa.</div></div><label class="switch ctrl"><input type="checkbox" id="sNotif" data-set="notificar" ${S.settings.notificar ? "checked" : ""} aria-label="Alertas no celular"><span></span></label></div>
+      ${PLAT.iosSemBle && !PLAT.standalone ? `<div class="item stack">${blocoInstalarIphone(false)}</div>` : ""}
       <div class="item"><div><div class="t1">Modo demonstração</div><div class="t2">Geladeira simulada e dados de exemplo, separados dos dados reais.</div></div><label class="switch ctrl"><input type="checkbox" id="sDemo" ${S.demo ? "checked" : ""} ${PREVIEW ? "disabled" : ""} aria-label="Modo demonstração"><span></span></label></div>`;
   }
   function updateTech(force) {
@@ -977,7 +998,11 @@
       S.outSince = null; S.alertActive = false;
     }
     if (key === "notificar" && v) {
-      if (!("Notification" in window)) { toast("Este navegador não permite notificações."); inp.checked = false; return; }
+      if (!("Notification" in window)) {
+        toast(PLAT.ios && !PLAT.standalone ? "No iPhone, adicione o app à Tela de Início para receber alertas." : "Este navegador não permite notificações.");
+        inp.checked = false;
+        return;
+      }
       const p = await Notification.requestPermission().catch(() => "denied");
       if (p !== "granted") { toast("Permissão de notificação negada. A vibração continua ativa."); inp.checked = false; v = false; }
     }
@@ -1015,7 +1040,7 @@
     $("#sheetBody").firstElementChild && id && ($("#sheetBody").firstElementChild.id = id);
     sh.hidden = false;
     $("#scrim").hidden = false;
-    document.body.style.overflow = "hidden";
+    PLAT.lockScroll();
     sheetOnClose = onClose || null;
     if (!PREVIEW && !sheetHistory) {
       if (pendingBack) needPush = true;
@@ -1030,7 +1055,7 @@
     sh.hidden = true;
     $("#scrim").hidden = true;
     $("#sheetBody").innerHTML = "";
-    document.body.style.overflow = "";
+    PLAT.unlockScroll();
     const cb = sheetOnClose; sheetOnClose = null;
     needPush = false;
     if (sheetHistory) { sheetHistory = false; if (!fromPop) try { pendingBack++; history.back(); } catch { pendingBack = 0; } }
@@ -1047,6 +1072,37 @@
   }
 
   /* ---------- conexão ---------- */
+  /** O Safari do iPhone não tem Bluetooth; navegadores como o Bluefy têm. */
+  function blocoIphoneBluetooth() {
+    return `<div class="banner info ios-ble">${icon("phone")}<div>
+        <strong>Para conectar a geladeira pelo iPhone</strong>
+        <p>O Safari não acessa Bluetooth. Um navegador que acessa, como o <b>Bluefy</b>, abre este mesmo app com o controle da geladeira liberado.</p>
+        <ol class="steps" style="margin-top:8px">
+          <li>Instale o <b>Bluefy</b> pela App Store (gratuito).</li>
+          <li>Copie o endereço do app aqui embaixo.</li>
+          <li>Cole na barra de endereço do Bluefy e abra.</li>
+          <li>Toque em <b>Conectar geladeira</b> e escolha ${esc(DEVICE.targetName)}.</li>
+        </ol>
+        <div class="actions">
+          <a class="btn btn-sm btn-secondary" href="${PLAT.bluefyUrl}" target="_blank" rel="noopener">${icon("phone")}Abrir na App Store</a>
+          <button class="btn btn-sm btn-secondary" data-act="copiar-endereco">${icon("copy")}Copiar endereço</button>
+        </div>
+        <p class="small" style="margin-top:8px">Sem o Bluefy o app funciona normalmente no Safari para registrar o mel e ver o histórico — só a leitura ao vivo da geladeira fica de fora.</p>
+      </div></div>`;
+  }
+  /** Instruções de instalação na Tela de Início do iPhone. */
+  function blocoInstalarIphone(compacto) {
+    return `<div class="banner info ios-install">${icon("share")}<div>
+        <strong>Deixe o app na Tela de Início</strong>
+        <p>Assim ele abre em tela cheia, guarda os dados com segurança e funciona sem internet.</p>
+        <ol class="steps" style="margin-top:8px">
+          <li>Toque em <b>Compartilhar</b> ${icon("share").replace("<svg", '<svg style="width:15px;height:15px;vertical-align:-3px"')} na barra do Safari.</li>
+          <li>Role e escolha <b>Adicionar à Tela de Início</b>.</li>
+          <li>Confirme em <b>Adicionar</b>.</li>
+        </ol>
+        ${compacto ? `<div class="actions"><button class="btn btn-sm btn-ghost" data-act="ocultar-dica-instalar">Não mostrar de novo</button></div>` : ""}
+      </div></div>`;
+  }
   function openConn() {
     openSheet(`<div id="connSheet"></div>`);
     renderConnSheet();
@@ -1063,7 +1119,7 @@
           <div class="item"><div><div class="t1">${esc(DEVICE.targetName)}</div><div class="t2 mono">${esc(DEVICE.address)}</div></div><span class="badge ${on ? "ok" : st === "reconnecting" ? "warn" : ""}"><span class="dot"></span>${on ? "Conectada" : st === "reconnecting" ? "Reconectando" : busy ? "Conectando" : "Desconectada"}</span></div>
           ${on && S.live ? `<div class="item"><div><div class="t1">${temp(S.live.current)} °C interna · ${temp(S.live.target)} °C configurada</div><div class="t2">Consulta automática a cada 5 s</div></div></div>` : ""}
         </div>
-        ${!sup ? `<div class="banner warn">${icon("alert")}<div><strong>Bluetooth indisponível neste navegador</strong><p>Abra o app no <b>Chrome para Android</b> pelo endereço HTTPS em que ele foi publicado e instale-o na tela inicial. No iPhone o Safari não oferece Bluetooth Web.</p></div></div>` : ""}
+        ${!sup ? (PLAT.ios ? blocoIphoneBluetooth() : `<div class="banner warn">${icon("alert")}<div><strong>Bluetooth indisponível neste navegador</strong><p>Abra o app no <b>Chrome para Android</b> pelo endereço HTTPS em que ele foi publicado e instale-o na tela inicial.</p></div></div>`) : ""}
         ${!on && sup && !S.demo ? `<div class="banner info">${icon("info")}<div><strong>Antes de conectar</strong><ol class="steps" style="margin-top:6px"><li>Feche o app oficial da geladeira e o nRF Connect. O módulo aceita uma conexão por vez.</li><li>Ative Bluetooth e Localização no celular.</li><li>Fique a poucos metros da geladeira ligada.</li><li>No seletor, escolha <b>${esc(DEVICE.targetName)}</b>.</li></ol></div></div>` : ""}
       </div>
       <div class="sheet-foot">
@@ -1331,8 +1387,9 @@
           <div class="field"><label for="wResp">Responsável</label><input class="input" id="wResp" value="${esc(s.responsavel)}" maxlength="60" placeholder="Seu nome"></div>
         </div>
         <p class="small muted" style="margin:0">Faixa de conservação inicial: ${s.faixaMin}–${s.faixaMax} °C (mel in natura). Dá para mudar em Ajustes.</p>
+        ${PLAT.iosSemBle ? `<p class="small muted" style="margin:0">Neste navegador do iPhone dá para registrar o mel e ver o histórico. Para ler a geladeira ao vivo, Ajustes mostra como abrir o app no Bluefy.</p>` : ""}
         <div class="sheet-foot">
-          <button class="btn btn-primary btn-block" type="submit">${icon("bt")}Salvar e conectar geladeira</button>
+          <button class="btn btn-primary btn-block" type="submit">${bleSupported() ? `${icon("bt")}Salvar e conectar geladeira` : "Salvar e começar"}</button>
           <button class="btn btn-secondary btn-block" type="button" data-act="welcome-demo">Explorar com dados de exemplo</button>
           <button class="btn btn-ghost btn-block" type="button" data-act="welcome-later">Configurar depois</button>
         </div>
@@ -1341,7 +1398,7 @@
       e.preventDefault();
       await finishWelcome(true);
       closeSheet();
-      doConnect();
+      if (bleSupported()) doConnect();
     });
   }
   async function finishWelcome(read) {
@@ -1355,15 +1412,17 @@
   }
 
   /* ================= arquivos ================= */
-  function saveFile(name, mime, content) {
+  async function saveFile(name, mime, content) {
     const blob = new Blob([content], { type: mime });
     if (PREVIEW) { toast("Na prévia os arquivos não são baixados. No app instalado, este botão salva o arquivo."); return; }
+    const file = typeof File === "function" ? new File([blob], name, { type: mime }) : null;
+    // No iPhone o caminho natural é a folha de compartilhamento: Arquivos, AirDrop, WhatsApp.
+    if (PLAT.ios && file && (await PLAT.shareFile(file, name))) { toast("Arquivo enviado."); return; }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    const file = typeof File === "function" ? new File([blob], name, { type: mime }) : null;
-    if (file && navigator.canShare?.({ files: [file] })) toast(`${name} salvo em Downloads.`, "Compartilhar", () => navigator.share({ files: [file], title: name }).catch(() => {}));
+    a.href = url; a.download = name; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    if (file && navigator.canShare?.({ files: [file] })) toast(`${name} salvo.`, "Compartilhar", () => PLAT.shareFile(file, name));
     else toast(`${name} salvo em Downloads.`);
   }
   const csvCell = (v) => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
@@ -1493,6 +1552,18 @@
         case "csv-leituras": return csvLeituras();
         case "backup": return backup();
         case "wipe": return wipe();
+        case "copiar-endereco": {
+          const ok = await PLAT.copiar(PLAT.appUrl);
+          toast(ok ? "Endereço copiado. Cole no Bluefy." : `Copie manualmente: ${PLAT.appUrl}`);
+          return;
+        }
+        case "ocultar-dica-instalar": {
+          S.settings.dicaInstalarOculta = true;
+          await saveSettings();
+          renderPainel();
+          return;
+        }
+        case "como-conectar-iphone": return openConn();
         case "demo-on": closeSheet(); return setDemo(true);
         case "welcome-demo": await finishWelcome(true); closeSheet(); return setDemo(true);
         case "welcome-later": await finishWelcome(true); return closeSheet();

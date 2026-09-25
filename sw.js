@@ -1,10 +1,11 @@
 /* Service worker: o app funciona sem internet depois da primeira abertura. */
-const VERSION = "ab-geladeira-v1.0.0";
+const VERSION = "ab-geladeira-v1.1.0";
 const SHELL = [
   "./",
   "index.html",
   "manifest.webmanifest",
   "css/app.css",
+  "js/platform.js",
   "js/protocol.js",
   "js/ble.js",
   "js/db.js",
