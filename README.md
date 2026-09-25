@@ -25,20 +25,21 @@ Aplicativo para Android que acompanha a geladeira **Resfri Ar AK1** por Bluetoot
 
 O protocolo está em [`docs/PROTOCOLO_OBSERVADO.md`](docs/PROTOCOLO_OBSERVADO.md). Os comandos ligar/desligar, ECO/MAX, H1/H2/H3 e segunda zona continuam fora do app até serem validados.
 
-## Como publicar (uma vez)
+## Onde o app está publicado
 
-O Bluetooth pelo navegador só funciona em endereço **HTTPS**. O jeito mais simples é o GitHub Pages, gratuito:
+**https://andersonsakuma.github.io/amazonia-bee-geladeira/**
 
-1. Crie um repositório no GitHub (por exemplo `geladeira-mel`).
-2. Envie **todo o conteúdo desta pasta** para a raiz do repositório (`index.html` precisa ficar na raiz).
-3. Em **Settings → Pages**, escolha *Deploy from a branch*, branch `main`, pasta `/ (root)` e salve.
-4. Em um ou dois minutos o endereço fica disponível: `https://USUARIO.github.io/geladeira-mel/`.
+Publicado pelo GitHub Pages a partir da branch `main` deste repositório (`andersonsakuma/amazonia-bee-geladeira`). Cada envio para `main` atualiza o app em um ou dois minutos; quem já tem o app instalado recebe a nova versão na abertura seguinte.
 
-Também funciona em Netlify, Cloudflare Pages ou qualquer hospedagem com HTTPS. Todos os caminhos são relativos.
+Para atualizar o app depois de mudar algum arquivo:
+
+```bash
+git add -A && git commit -m "descricao da mudanca" && git push
+```
 
 ## Como instalar no celular Android
 
-1. Abra o endereço no **Google Chrome** do Android (versão atual).
+1. Abra **https://andersonsakuma.github.io/amazonia-bee-geladeira/** no **Google Chrome** do Android (ou aponte a câmera para o QR code `qr-geladeira.png`, na pasta do projeto).
 2. Menu ⋮ → **Instalar app** (ou *Adicionar à tela inicial*).
 3. Abra pelo ícone da abelha. Na primeira vez, informe nome da geladeira, capacidade em kg e responsável.
 4. Toque em **Conectar geladeira** e escolha `AK1-FEFE0C070750` no seletor do sistema.
@@ -49,14 +50,24 @@ Depois da primeira autorização, o app tenta reconectar sozinho ao abrir, quand
 
 **iPhone:** o Safari não oferece Bluetooth pelo navegador. O controle de estoque funciona, a conexão com a geladeira não.
 
-### APK para distribuir (opcional)
+### APK para instalar sem a loja
 
-Com o app já publicado em HTTPS, é possível gerar um APK sem Android Studio:
+O pacote Android já está gerado, na pasta `app-android` (fora deste repositório, junto com o projeto):
 
-1. Acesse `https://www.pwabuilder.com`, cole o endereço publicado e gere o pacote **Android**.
-2. Instale o APK gerado nos celulares (permitir instalação de fontes desconhecidas) ou publique na Play Store.
+| Arquivo | Para que serve |
+|---|---|
+| `geladeira-de-mel.apk` | instalar direto no celular (1,5 MB) |
+| `geladeira-de-mel.aab` | publicar na Google Play, se um dia for o caso |
+| `signing.keystore` e `signing-key-info.txt` | chave de assinatura — **guarde em local seguro** |
+| `assetlinks.json` | tira a barra de endereço do app (ver abaixo) |
 
-O APK abre o mesmo app em tela cheia e usa o Chrome do aparelho para o Bluetooth.
+Para instalar o APK: copie o arquivo para o celular, toque nele e autorize "instalar de fontes desconhecidas" quando o Android pedir.
+
+A chave de assinatura não pode ser perdida: sem ela, uma versão futura do APK não se instala por cima desta, só depois de desinstalar a atual. O arquivo de informações da chave contém as senhas, então não o coloque no repositório.
+
+O APK é um TWA: abre o mesmo endereço publicado dentro de uma janela do Chrome do aparelho, então o Bluetooth funciona igual. Enquanto o arquivo `assetlinks.json` não estiver publicado em `https://andersonsakuma.github.io/.well-known/assetlinks.json` (raiz do domínio, um repositório à parte chamado `andersonsakuma.github.io`), o app mostra uma barra fina com o endereço no topo. Tudo funciona assim mesmo; é só aparência.
+
+Se o app for gerado de novo pelo PWABuilder, reaproveite a mesma `signing.keystore` para manter a continuidade das atualizações.
 
 ## Testar no computador Windows
 
