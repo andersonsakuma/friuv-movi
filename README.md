@@ -1,6 +1,6 @@
-# Amazônia Bee · Geladeira de mel
+# Amazônia Bee · FriUV Movi
 
-Aplicativo para Android que acompanha a geladeira **Resfri Ar AK1** por Bluetooth e controla o estoque de mel em kg, por lote.
+**FriUV Movi** é o aplicativo da geladeira de mel da Amazônia Bee: acompanha a unidade **Resfri Ar AK1** por Bluetooth e controla o estoque de mel em kg, por lote. Roda em Android e iPhone.
 
 - Temperatura interna e configurada em tempo real (consulta automática a cada 5 s).
 - Ajuste da temperatura configurada (zona 1) com confirmação na primeira alteração da sessão e conferência do valor devolvido pela geladeira.
@@ -27,9 +27,9 @@ O protocolo está em [`docs/PROTOCOLO_OBSERVADO.md`](docs/PROTOCOLO_OBSERVADO.md
 
 ## Onde o app está publicado
 
-**https://andersonsakuma.github.io/amazonia-bee-geladeira/**
+**https://andersonsakuma.github.io/friuv-movi/**
 
-Publicado pelo GitHub Pages a partir da branch `main` deste repositório (`andersonsakuma/amazonia-bee-geladeira`). Cada envio para `main` atualiza o app em um ou dois minutos; quem já tem o app instalado recebe a nova versão na abertura seguinte.
+Publicado pelo GitHub Pages a partir da branch `main` deste repositório (`andersonsakuma/friuv-movi`). Cada envio para `main` atualiza o app em um ou dois minutos; quem já tem o app instalado recebe a nova versão na abertura seguinte.
 
 Para atualizar o app depois de mudar algum arquivo:
 
@@ -39,7 +39,7 @@ git add -A && git commit -m "descricao da mudanca" && git push
 
 ## Como instalar no celular Android
 
-1. Abra **https://andersonsakuma.github.io/amazonia-bee-geladeira/** no **Google Chrome** do Android (ou aponte a câmera para o QR code `qr-geladeira.png`, na pasta do projeto).
+1. Abra **https://andersonsakuma.github.io/friuv-movi/** no **Google Chrome** do Android (ou aponte a câmera para o QR code `qr-friuv-movi.png`, na pasta do projeto).
 2. Menu ⋮ → **Instalar app** (ou *Adicionar à tela inicial*).
 3. Abra pelo ícone da abelha. Na primeira vez, informe nome da geladeira, capacidade em kg e responsável.
 4. Toque em **Conectar geladeira** e escolha `AK1-FEFE0C070750` no seletor do sistema.
@@ -54,7 +54,7 @@ O mesmo endereço funciona no iOS. O que muda é o Bluetooth: **o Safari não ac
 
 ### Registrar mel e ver o histórico (Safari)
 
-1. Abra **https://andersonsakuma.github.io/amazonia-bee-geladeira/** no Safari.
+1. Abra **https://andersonsakuma.github.io/friuv-movi/** no Safari.
 2. Toque em **Compartilhar** e escolha **Adicionar à Tela de Início**.
 3. Abra pelo ícone. Tudo funciona: entradas e saídas de lotes, histórico, gráficos, cópia de segurança e planilhas.
 
@@ -81,8 +81,8 @@ O pacote Android já está gerado, na pasta `app-android` (fora deste repositór
 
 | Arquivo | Para que serve |
 |---|---|
-| `geladeira-de-mel.apk` | instalar direto no celular (1,5 MB) |
-| `geladeira-de-mel.aab` | publicar na Google Play, se um dia for o caso |
+| `friuv-movi.apk` | instalar direto no celular |
+| `friuv-movi.aab` | publicar na Google Play, se um dia for o caso |
 | `signing.keystore` e `signing-key-info.txt` | chave de assinatura — **guarde em local seguro** |
 | `assetlinks.json` | tira a barra de endereço do app (ver abaixo) |
 

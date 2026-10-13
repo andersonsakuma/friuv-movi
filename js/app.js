@@ -1,11 +1,11 @@
-/* Amazônia Bee · Geladeira de mel — interface e regras de negócio. */
+/* Amazônia Bee · FriUV Movi — interface e regras de negócio. */
 (() => {
   "use strict";
   const { DEVICE, UUID, buildSetTargetPacket, formatHex, formatAscii } = window.AK1;
   const { WebBleTransport, SimTransport, FridgeController } = window.FridgeBLE;
   const PLAT = window.PLAT;
   const PREVIEW = !!window.__AB_PREVIEW;
-  const VERSION = "1.1.0";
+  const VERSION = "1.2.0";
 
   /* ================= utilidades ================= */
   const $ = (s, r = document) => r.querySelector(s);
@@ -101,7 +101,7 @@
   const spText = (sci) => { const f = ESPECIES.find((e) => e[0] === sci); return f ? `${f[0]} (${f[1]})` : sci || ""; };
 
   const DEFAULTS = {
-    unidade: "Geladeira de mel 01",
+    unidade: "FriUV Movi 01",
     local: "",
     responsavel: "",
     capacidadeKg: 30,
@@ -149,6 +149,8 @@
     S.db = await window.ABStore.openStore(S.demo ? "ab-geladeira-demo" : "ab-geladeira");
     const st = await S.db.get("kv", "settings");
     S.settings = { ...structuredClone(DEFAULTS), ...(st?.v || {}) };
+    // o produto passou a se chamar FriUV Movi: migra quem nunca trocou o nome padrão
+    if (S.settings.unidade === "Geladeira de mel 01") { S.settings.unidade = "FriUV Movi 01"; await S.db.put("kv", { k: "settings", v: S.settings }); }
     S.lotes = await S.db.all("lotes");
     S.movs = await S.db.all("movs");
     S.eventos = await S.db.all("eventos");
@@ -204,7 +206,7 @@
 
   async function seedDemo() {
     const now = Date.now();
-    const settings = { ...structuredClone(DEFAULTS), unidade: "Geladeira de mel 01", local: "Base de campo (exemplo)", responsavel: "Equipe de campo", onboarded: true };
+    const settings = { ...structuredClone(DEFAULTS), unidade: "FriUV Movi 01", local: "Base de campo (exemplo)", responsavel: "Equipe de campo", onboarded: true };
     settings.lastKnown = { ...DEFAULTS.lastKnown };
     S.settings = settings;
     await saveSettings();
@@ -274,7 +276,7 @@
         S.alertActive = true;
         const msg = `Temperatura fora da faixa há ${alertaMin} min: ${s.current} °C (faixa ${faixaMin}–${faixaMax} °C)`;
         addEvent("alerta", msg);
-        notifyUser("Geladeira de mel fora da faixa", msg);
+        notifyUser("FriUV Movi fora da faixa", msg);
       }
     } else {
       if (S.alertActive) addEvent("normalizado", `Temperatura voltou à faixa: ${s.current} °C`);
@@ -384,7 +386,7 @@
   }
   const renderAll = () => { renderBrand(); renderView(S.view); };
   function renderBrand() {
-    $("#brandSub").textContent = S.settings.unidade || "Geladeira de mel";
+    $("#brandSub").textContent = S.settings.unidade || "FriUV Movi";
     $("#demoRibbon").hidden = !S.demo;
     if (PREVIEW) $("#demoRibbon").textContent = "Prévia · geladeira simulada e dados de exemplo. Instale no Android para conectar à AK1.";
   }
@@ -918,7 +920,7 @@
       </details>
       <div class="about card">
         <img src="assets/logo-amazonia-bee.png" alt="Amazônia Bee" width="120" height="116" style="width:120px">
-        <div><div class="card-title" style="font-size:24px">Amazônia Bee · Geladeira de mel</div><div class="small muted">Versão ${VERSION} · Resfri Ar AK1 via Bluetooth LE</div></div>
+        <div><div class="card-title" style="font-size:24px">Amazônia Bee · FriUV Movi</div><div class="small muted">Versão ${VERSION} · Resfri Ar AK1 via Bluetooth LE</div></div>
         <span class="logo-plate"><img src="assets/logo-ipe-fis.png" alt="IPÊ – Fábrica de Inovações em Sociobioeconomia" width="200" height="142"></span>
       </div>`;
     renderAjustesConn();
@@ -1379,7 +1381,7 @@
   function openWelcome() {
     const s = S.settings;
     openSheet(`<div class="welcome-logos"><img class="bee" src="assets/logo-amazonia-bee.png" alt="Amazônia Bee" width="96" height="93"><span class="logo-plate"><img src="assets/logo-ipe-fis.png" alt="IPÊ – Fábrica de Inovações em Sociobioeconomia" width="150" height="107"></span></div>
-      <div class="sheet-head" style="text-align:center"><div style="flex:1"><h2 id="sheetTitle" tabindex="-1">Geladeira de mel</h2><p>Temperatura da Resfri Ar em tempo real e controle de cada quilo de mel que entra e sai.</p></div></div>
+      <div class="sheet-head" style="text-align:center"><div style="flex:1"><h2 id="sheetTitle" tabindex="-1">FriUV Movi</h2><p>Temperatura da Resfri Ar em tempo real e controle de cada quilo de mel que entra e sai.</p></div></div>
       <form class="form" id="fWelcome" novalidate>
         <div class="field"><label for="wNome">Nome da geladeira</label><input class="input" id="wNome" value="${esc(s.unidade)}" maxlength="60"></div>
         <div class="grid-2">
@@ -1434,22 +1436,22 @@
       const l = S.lotes.find((x) => x.id === m.loteId) || {};
       rows.push([dfDate.format(m.t), dfTime.format(m.t), m.tipo, l.codigo, csvNum(m.kg), spText(l.especie), l.produtor, l.comunidade, m.destino, m.responsavel, m.obs, m.estornado ? "sim" : "não"]);
     }
-    saveFile(`amazonia-bee-movimentacoes-${stamp()}.csv`, "text/csv;charset=utf-8", "﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n"));
+    saveFile(`friuv-movi-movimentacoes-${stamp()}.csv`, "text/csv;charset=utf-8", "﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n"));
   }
   function csvLeituras() {
     const rows = [["data", "hora", "temperatura_interna_C", "temperatura_configurada_C", "dentro_da_faixa"]];
     for (const r of S.leituras) rows.push([dfDate.format(r.t), new Date(r.t).toLocaleTimeString("pt-BR"), r.c, r.a ?? "", r.c >= S.settings.faixaMin && r.c <= S.settings.faixaMax ? "sim" : "não"]);
-    saveFile(`amazonia-bee-leituras-${stamp()}.csv`, "text/csv;charset=utf-8", "﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n"));
+    saveFile(`friuv-movi-leituras-${stamp()}.csv`, "text/csv;charset=utf-8", "﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n"));
   }
   function backup() {
-    const data = { app: "amazonia-bee-geladeira", versao: VERSION, exportadoEm: new Date().toISOString(), dispositivo: DEVICE.targetName, demo: S.demo, settings: S.settings, lotes: S.lotes, movs: S.movs, eventos: S.eventos, leituras: S.leituras };
-    saveFile(`amazonia-bee-backup-${stamp()}.json`, "application/json", JSON.stringify(data));
+    const data = { app: "friuv-movi", versao: VERSION, exportadoEm: new Date().toISOString(), dispositivo: DEVICE.targetName, demo: S.demo, settings: S.settings, lotes: S.lotes, movs: S.movs, eventos: S.eventos, leituras: S.leituras };
+    saveFile(`friuv-movi-backup-${stamp()}.json`, "application/json", JSON.stringify(data));
     addEvent("backup", "Cópia de segurança exportada");
   }
   async function importBackup(file) {
     let data;
     try { data = JSON.parse(await file.text()); } catch { toast("Arquivo inválido: não é um JSON."); return; }
-    if (data?.app !== "amazonia-bee-geladeira" || !Array.isArray(data.lotes) || !Array.isArray(data.movs)) { toast("Este arquivo não é uma cópia da Geladeira de mel."); return; }
+    if (!["friuv-movi", "amazonia-bee-geladeira"].includes(data?.app) || !Array.isArray(data.lotes) || !Array.isArray(data.movs)) { toast("Este arquivo não é uma cópia do FriUV Movi."); return; }
     const ok = await confirmSheet({
       title: "Restaurar cópia de segurança",
       body: `<p style="margin:0">O arquivo tem <b>${data.lotes.length} lotes</b>, <b>${data.movs.length} movimentações</b> e <b>${(data.leituras || []).length} leituras</b>, exportado em ${esc(new Date(data.exportadoEm).toLocaleString("pt-BR"))}.</p><p class="small muted" style="margin:0">Os dados atuais deste aparelho serão substituídos.</p>`,

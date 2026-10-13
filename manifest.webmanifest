@@ -1,7 +1,7 @@
 {
-  "name": "Amazônia Bee · Geladeira de mel",
-  "short_name": "Geladeira de mel",
-  "description": "Temperatura da geladeira Resfri Ar AK1 em tempo real e controle de lotes de mel em kg.",
+  "name": "Amazônia Bee · FriUV Movi",
+  "short_name": "FriUV Movi",
+  "description": "FriUV Movi: temperatura da geladeira em tempo real e controle de lotes de mel em kg.",
   "lang": "pt-BR",
   "id": "./",
   "start_url": "./#painel",

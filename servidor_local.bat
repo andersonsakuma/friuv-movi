@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 echo ============================================
-echo Amazonia Bee - Geladeira de mel (teste local)
+echo Amazonia Bee - FriUV Movi (teste local)
 echo ============================================
 set "PY="
 where py >nul 2>nul
