@@ -1,5 +1,5 @@
 /* Service worker: o app funciona sem internet depois da primeira abertura. */
-const VERSION = "ab-geladeira-v1.1.0";
+const VERSION = "friuv-movi-v1.2.0";
 const SHELL = [
   "./",
   "index.html",
